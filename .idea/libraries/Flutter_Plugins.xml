@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Flutter Plugins" type="FlutterPluginsLibraryType">
+    <CLASSES>
+      <root url="file://D:/dev/flutter/.pub-cache/hosted/pub.flutter-io.cn/flutter_string_encryption-0.3.1" />
+      <root url="file://D:/dev/flutter/.pub-cache/hosted/pub.flutter-io.cn/fluttertoast-3.1.0" />
+      <root url="file://D:/dev/flutter/.pub-cache/hosted/pub.flutter-io.cn/shared_preferences-0.5.3+4" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
