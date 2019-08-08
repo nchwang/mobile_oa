@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:mobile_oa/utils/shared_preferences_utils.dart';
+import 'package:mobile_oa/model/user_login_data.dart';
+import 'package:mobile_oa/utils/dio_utils.dart';
+import 'package:mobile_oa/constant/api_config.dart';
+import 'package:mobile_oa/model/user_project.dart';
 
 class DailyPage extends StatefulWidget {
   @override
@@ -14,6 +19,39 @@ class _DailyPageState extends State<DailyPage> {
   DateTime _startDate = DateTime.now().toLocal();
   DateTime _endDate = DateTime.now().toLocal();
   GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
+  List<UserProject> projectList = [];
+
+  @override
+  void initState(){
+    _getUserProjectList();
+  }
+
+  //页面加载时获得当前用户的Action和
+  void _getUserProjectList() async{
+    String userId = await SharedPreferencesUtils.getString('id');
+    //print('Current user id is : ' + userId);
+    var formData = {
+      'user_id': userId
+    };
+
+    await DioUtils.getInstance().request(ProjectApi.project_list,formData: formData).then((val){
+      try{
+        var decode = val['data'];
+        decode['items'].forEach((v) {
+          //print(v);
+          UserProject up = new UserProject(projectId:v['id'],projectName:v['name']);
+          print(up);
+          setState(){
+            projectList.add(up);
+          }
+        });
+      }on FormatException catch(e){
+        print('error ${e.toString()}');
+      }
+
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -31,21 +69,14 @@ class _DailyPageState extends State<DailyPage> {
           key: _formKey,
           child: new ListView(
             children: <Widget>[
-              new TextFormField(
-                decoration: new InputDecoration(
-                  labelText: '项目名称',
-                ),
-                onSaved: (val) {
-                  _name = val;
-                },
-              ),
+              _buildProjectInfo(),
               new TextFormField(
                 decoration: new InputDecoration(
                   labelText: '行为科目',
                 ),
                 obscureText: true,
                 validator: (val) {
-                  return val.length < 4 ? "密码长度错误" : null;
+                  return '';
                 },
                 onSaved: (val) {
                   _password = val;
@@ -154,6 +185,54 @@ class _DailyPageState extends State<DailyPage> {
 //    );
 //  }
 
+  List<DropdownMenuItem> _getProjectData() {
+    List<DropdownMenuItem> items = new List();
+    projectList.forEach((v){
+      DropdownMenuItem dropdownMenuItem = new DropdownMenuItem(
+        child: new Text('${v.projectName}'),
+        value: '${v.projectId}',
+      );
+      items.add(dropdownMenuItem);
+    });
+
+    return items;
+  }
+
+  Widget _buildProjectInfo() {
+    return Container(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+          Expanded(
+            child: Text(
+              "项目名称:",
+              style: TextStyle(fontSize: 16),
+            ),
+            flex: 3,
+          ),
+          Expanded(
+            child: DropdownButton(
+              items: _getProjectData(),
+              hint: new Text('选择项目'), //当没有默认值的时候可以设置的提示
+              value: _kaoQin, //下拉菜单选择完之后显示给用户的值
+              onChanged: (T) {
+                //下拉菜单item点击之后的回调
+                setState(() {
+                  _kaoQin = T;
+                });
+              },
+              elevation: 24, //设置阴影的高度
+              style: new TextStyle(
+                //设置文本框里面文字的样式
+                  color: Colors.red),
+            ),
+            flex: 5,
+          ),
+        ],
+      ),
+    );
+  }
+
   List<DropdownMenuItem> _getKaoQinListData() {
     List<DropdownMenuItem> items = new List();
     DropdownMenuItem dropdownMenuItem1 = new DropdownMenuItem(
@@ -206,7 +285,7 @@ class _DailyPageState extends State<DailyPage> {
           ),
           Expanded(
             child: Text(
-              "是否预期:",
+              "是否达到预期:",
               style: TextStyle(fontSize: 16),
             ),
             flex: 4,
@@ -265,10 +344,10 @@ class _DailyPageState extends State<DailyPage> {
                         }, currentTime: DateTime.now(), locale: LocaleType.zh);
                   },
                   child: Text(
-                    '开始时间',
+                    '选择开始时间',
                     style: TextStyle(color: Colors.blue),
                   )),
-              flex: 3,
+              flex: 4,
             ),
             Expanded(
               child: Text('$_startDate'),
@@ -287,10 +366,10 @@ class _DailyPageState extends State<DailyPage> {
                         }, currentTime: DateTime.now(), locale: LocaleType.zh);
                   },
                   child: Text(
-                    '结束时间',
+                    '选择结束时间',
                     style: TextStyle(color: Colors.blue),
                   )),
-              flex: 3,
+              flex: 4,
             ),
             Expanded(
               child: Text('$_endDate'),

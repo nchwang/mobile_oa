@@ -124,6 +124,16 @@ class SharedPreferencesUtils {
     return loginFlag;
   }
 
+  static Future<String> getString(para) async {
+    SharedPreferences sp = await SharedPreferences.getInstance();
+
+    try{
+      return sp.getString(para);
+    }catch(e){
+      return sp.getInt(para).toString();
+    }
+
+  }
   // 读取用户令牌
   static Future<String> readAccessToken() async {
     SharedPreferences sp = await SharedPreferences.getInstance();

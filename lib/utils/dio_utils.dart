@@ -3,6 +3,8 @@ import 'package:mobile_oa/api/user_api.dart';
 import 'package:mobile_oa/constant/restfulapis.dart';
 import 'package:mobile_oa/utils/event_bus_utils.dart';
 import 'package:mobile_oa/utils/shared_preferences_utils.dart';
+import 'dart:async';
+import 'dart:io';
 
 class DioUtils {
   // 唯一数据源
@@ -85,6 +87,29 @@ class DioUtils {
     dio.options.headers['Authorization'] = 'Bearer ' + accessToken;
     return dio;
   }
+
+  Future request(url,{formData})async{
+    try{
+      //print('开始获取数据...............');
+      Response response;
+      Dio dio = await getDio();
+      //dio.options.contentType=ContentType.parse("application/x-www-form-urlencoded");
+      //dio.options.responseType=ResponseType.plain;
+      if(formData==null){
+        response = await dio.get(url);
+      }else{
+        response = await dio.get(url,queryParameters:formData);
+      }
+      if(response.statusCode==200){
+        return response.data;
+      }else{
+        throw Exception('后端接口出现异常，请检测代码和服务器情况.........');
+      }
+    }catch(e){
+      return print('ERROR:======>${e}');
+    }
+
+  }
 }
 
 class TokenInterceptor extends Interceptor {
@@ -120,4 +145,6 @@ class TokenInterceptor extends Interceptor {
       }
     }
   }
+
+
 }
