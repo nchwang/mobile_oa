@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 import 'package:mobile_oa/utils/shared_preferences_utils.dart';
-import 'package:mobile_oa/model/user_login_data.dart';
 import 'package:mobile_oa/utils/dio_utils.dart';
 import 'package:mobile_oa/constant/api_config.dart';
 import 'package:mobile_oa/model/user_project.dart';
@@ -14,7 +13,8 @@ class DailyPage extends StatefulWidget {
 class _DailyPageState extends State<DailyPage> {
   String _name;
   String _password;
-  String _kaoQin;
+  int _kaoQin;
+  String _project;
   bool _isYuQi = false;
   DateTime _startDate = DateTime.now().toLocal();
   DateTime _endDate = DateTime.now().toLocal();
@@ -24,6 +24,7 @@ class _DailyPageState extends State<DailyPage> {
   @override
   void initState(){
     _getUserProjectList();
+    _getUserActionList();
   }
 
   //页面加载时获得当前用户的Action和
@@ -38,13 +39,26 @@ class _DailyPageState extends State<DailyPage> {
       try{
         var decode = val['data'];
         decode['items'].forEach((v) {
-          //print(v);
+          //print("The result is " + v['id'].toString());
           UserProject up = new UserProject(projectId:v['id'],projectName:v['name']);
-          print(up);
-          setState(){
+          //print(up);
+          setState((){
             projectList.add(up);
-          }
+          });
         });
+      }on FormatException catch(e){
+        print('error ${e.toString()}');
+      }
+
+    });
+  }
+
+
+  void _getUserActionList() async{
+
+    await DioUtils.getInstance().request(ProjectApi.project_action).then((val){
+      try{
+        print(val);
       }on FormatException catch(e){
         print('error ${e.toString()}');
       }
@@ -203,22 +217,21 @@ class _DailyPageState extends State<DailyPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         children: <Widget>[
-          Expanded(
-            child: Text(
-              "项目名称:",
-              style: TextStyle(fontSize: 16),
-            ),
-            flex: 3,
-          ),
+//          Expanded(
+//            child: Text(
+//              "项目:",
+//              style: TextStyle(fontSize: 16),
+//            ),
+//          ),
           Expanded(
             child: DropdownButton(
               items: _getProjectData(),
               hint: new Text('选择项目'), //当没有默认值的时候可以设置的提示
-              value: _kaoQin, //下拉菜单选择完之后显示给用户的值
+              value: _project, //下拉菜单选择完之后显示给用户的值
               onChanged: (T) {
                 //下拉菜单item点击之后的回调
                 setState(() {
-                  _kaoQin = T;
+                  _project = T;
                 });
               },
               elevation: 24, //设置阴影的高度
@@ -226,7 +239,6 @@ class _DailyPageState extends State<DailyPage> {
                 //设置文本框里面文字的样式
                   color: Colors.red),
             ),
-            flex: 5,
           ),
         ],
       ),

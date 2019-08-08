@@ -114,16 +114,6 @@ class SharedPreferencesUtils {
     return map;
   }
 
-  // 读取登录状态
-  static Future<bool> readIsLogin() async {
-    SharedPreferences sp = await SharedPreferences.getInstance();
-    bool loginFlag = sp.getBool(isLogin);
-    if (loginFlag == null) {
-      return false;
-    }
-    return loginFlag;
-  }
-
   static Future<String> getString(para) async {
     SharedPreferences sp = await SharedPreferences.getInstance();
 
@@ -134,6 +124,17 @@ class SharedPreferencesUtils {
     }
 
   }
+  // 读取登录状态
+  static Future<bool> readIsLogin() async {
+    SharedPreferences sp = await SharedPreferences.getInstance();
+    bool loginFlag = sp.getBool(isLogin);
+    if (loginFlag == null) {
+      return false;
+    }
+    return loginFlag;
+  }
+
+
   // 读取用户令牌
   static Future<String> readAccessToken() async {
     SharedPreferences sp = await SharedPreferences.getInstance();
