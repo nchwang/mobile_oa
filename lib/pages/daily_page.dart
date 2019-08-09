@@ -4,6 +4,8 @@ import 'package:mobile_oa/utils/shared_preferences_utils.dart';
 import 'package:mobile_oa/utils/dio_utils.dart';
 import 'package:mobile_oa/constant/api_config.dart';
 import 'package:mobile_oa/model/user_project.dart';
+import 'package:mobile_oa/utils/date_format.dart';
+import 'package:flutter_picker/flutter_picker.dart';
 
 class DailyPage extends StatefulWidget {
   @override
@@ -13,17 +15,32 @@ class DailyPage extends StatefulWidget {
 class _DailyPageState extends State<DailyPage> {
   String _name;
   String _password;
-  int _kaoQin;
-  String _project;
+  String _kaoQin;
+  String _projectId;
+  String _actionId;
+
   bool _isYuQi = false;
-  DateTime _startDate = DateTime.now().toLocal();
-  DateTime _endDate = DateTime.now().toLocal();
+  DateTime _dailyDate = DateTime.now();
+  List<String> _startTime = ['00','00'];
+  List<String> _endTime = ['00','00'];
   GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
   List<UserProject> projectList = [];
+  List<UserAction> actionList = [];
 
+  String convertDateTime(DateTime dt){
+    if(dt != null){
+
+    }
+  }
   @override
   void initState(){
+    /**
+     * 获取用户有权填写的项目
+     */
     _getUserProjectList();
+    /**
+     * 获取用户的行为列表
+     */
     _getUserActionList();
   }
 
@@ -53,12 +70,22 @@ class _DailyPageState extends State<DailyPage> {
     });
   }
 
-
+ //后台返回数据格式为{items: [{value: 1, label: 营销类, children: [{value: 16, label: 登门拜访}
   void _getUserActionList() async{
 
     await DioUtils.getInstance().request(ProjectApi.project_action).then((val){
       try{
-        print(val);
+        var data = val['items'][0]['children'];
+        if(data != null){
+          data.forEach((v){
+            //print(v);
+            UserAction ua = new UserAction(actionValue:v['value'],actionName:v['label']);
+            //print(up);
+            setState((){
+              actionList.add(ua);
+            });
+          });
+        }
       }on FormatException catch(e){
         print('error ${e.toString()}');
       }
@@ -84,18 +111,7 @@ class _DailyPageState extends State<DailyPage> {
           child: new ListView(
             children: <Widget>[
               _buildProjectInfo(),
-              new TextFormField(
-                decoration: new InputDecoration(
-                  labelText: '行为科目',
-                ),
-                obscureText: true,
-                validator: (val) {
-                  return '';
-                },
-                onSaved: (val) {
-                  _password = val;
-                },
-              ),
+              _buildActionCodeList(),
               _buildKaoQin(),
               new TextFormField(
                 decoration: new InputDecoration(
@@ -105,7 +121,7 @@ class _DailyPageState extends State<DailyPage> {
                   _name = val;
                 },
               ),
-              _buildDaiyDateTime(),
+              _buildDaiyDateTime(context),
               new TextFormField(
                 decoration: new InputDecoration(
                   labelText: '为何要做',
@@ -155,49 +171,90 @@ class _DailyPageState extends State<DailyPage> {
     }
   }
 
-//  Widget _buildKaoQin() {
-//    return Row(
-//      children: <Widget>[
-//        Flexible(child: Text("外勤")),
-//        Flexible(
-//          child: RadioListTile<String>(
-//            value: '0',
-//            title: Text('无'),
-//            groupValue: _kaoqin,
-//            onChanged: (value) {
-//              setState(() {
-//                _kaoqin = value;
-//              });
-//            },
-//          ),
-//        ),
-//        Flexible(
-//          child: RadioListTile<String>(
-//            value: '1',
-//            title: Text('外勤'),
-//            groupValue: _kaoqin,
-//            onChanged: (value) {
-//              setState(() {
-//                _kaoqin = value;
-//              });
-//            },
-//          ),
-//        ),
-//        Flexible(
-//          child: RadioListTile<String>(
-//            value: '2',
-//            title: Text('出差'),
-//            groupValue: _kaoqin,
-//            onChanged: (value) {
-//              setState(() {
-//                _kaoqin = value;
-//              });
-//            },
-//          ),
-//        ),
-//      ],
-//    );
-//  }
+  _showStartTime(BuildContext context) {
+    Picker(
+        adapter: NumberPickerAdapter(data: [
+          NumberPickerColumn(
+              begin: 0,
+              end: 24,
+              onFormatValue: (v) {
+                return v < 10 ? "0$v" : "$v";
+              }
+          ),
+          NumberPickerColumn(
+              begin: 0,
+              end: 30,
+              jump:30,
+              onFormatValue: (v) {
+                return v < 10 ? "0$v" : "$v";
+              }
+          ),
+        ]),
+        delimiter: [
+          PickerDelimiter(child: Container(
+            width: 30.0,
+            alignment: Alignment.center,
+            child: Icon(Icons.more_vert),
+          ))
+        ],
+        hideHeader: true,
+        title: Text("Please Select"),
+        selectedTextStyle: TextStyle(color: Colors.blue),
+        onConfirm: (Picker picker, List value) {
+          setState(() {
+            List<String> temp = [];
+            picker.getSelectedValues().forEach((v){
+              temp.add(v<10? "0$v" : "$v");});
+            _startTime = temp;
+          });
+        }
+    ).showDialog(context);
+  }
+
+
+  _showEndTime(BuildContext context) {
+    Picker(
+        adapter: NumberPickerAdapter(data: [
+          NumberPickerColumn(
+              begin: 0,
+              end: 24,
+              onFormatValue: (v) {
+                return v < 10 ? "0$v" : "$v";
+              }
+          ),
+          NumberPickerColumn(
+              begin: 0,
+              end: 30,
+              jump:30,
+              onFormatValue: (v) {
+                return v < 10 ? "0$v" : "$v";
+              }
+          ),
+        ]),
+        delimiter: [
+          PickerDelimiter(child: Container(
+            width: 30.0,
+            alignment: Alignment.center,
+            child: Icon(Icons.more_vert),
+          ))
+        ],
+        hideHeader: true,
+        title: Text("Please Select"),
+        selectedTextStyle: TextStyle(color: Colors.blue),
+        onConfirm: (Picker picker, List value) {
+          //print(picker.getSelectedValues());
+          setState(() {
+            List<String> temp = [];
+            picker.getSelectedValues().forEach((v){
+              temp.add(v<10? "0$v" : "$v");});
+            //print(temp);
+            _endTime = temp;
+            //print(_endTime);
+          });
+        }
+    ).showDialog(context);
+  }
+
 
   List<DropdownMenuItem> _getProjectData() {
     List<DropdownMenuItem> items = new List();
@@ -205,6 +262,20 @@ class _DailyPageState extends State<DailyPage> {
       DropdownMenuItem dropdownMenuItem = new DropdownMenuItem(
         child: new Text('${v.projectName}'),
         value: '${v.projectId}',
+        
+      );
+      items.add(dropdownMenuItem);
+    });
+
+    return items;
+  }
+
+  List<DropdownMenuItem> _getActionCodeData() {
+    List<DropdownMenuItem> items = new List();
+    actionList.forEach((v){
+      DropdownMenuItem dropdownMenuItem = new DropdownMenuItem(
+        child: new Text('${v.actionName}'),
+        value: '${v.actionValue}',
       );
       items.add(dropdownMenuItem);
     });
@@ -227,11 +298,11 @@ class _DailyPageState extends State<DailyPage> {
             child: DropdownButton(
               items: _getProjectData(),
               hint: new Text('选择项目'), //当没有默认值的时候可以设置的提示
-              value: _project, //下拉菜单选择完之后显示给用户的值
+              value: _projectId, //下拉菜单选择完之后显示给用户的值
               onChanged: (T) {
                 //下拉菜单item点击之后的回调
                 setState(() {
-                  _project = T;
+                  _projectId = T;
                 });
               },
               elevation: 24, //设置阴影的高度
@@ -244,6 +315,42 @@ class _DailyPageState extends State<DailyPage> {
       ),
     );
   }
+
+
+  Widget _buildActionCodeList() {
+    return Container(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: <Widget>[
+//          Expanded(
+//            child: Text(
+//              "项目:",
+//              style: TextStyle(fontSize: 16),
+//            ),
+//          ),
+          Expanded(
+            child: DropdownButton(
+              items: _getActionCodeData(),
+              hint: new Text('选择行为科目'), //当没有默认值的时候可以设置的提示
+              value: _actionId, //下拉菜单选择完之后显示给用户的值
+              onChanged: (T) {
+                //下拉菜单item点击之后的回调
+                setState(() {
+                  _actionId = T;
+                });
+              },
+              elevation: 24, //设置阴影的高度
+              style: new TextStyle(
+                //设置文本框里面文字的样式
+                  color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   List<DropdownMenuItem> _getKaoQinListData() {
     List<DropdownMenuItem> items = new List();
@@ -340,54 +447,60 @@ class _DailyPageState extends State<DailyPage> {
     ]);
   }
 
-  Widget _buildDaiyDateTime() {
+  Widget _buildDaiyDateTime(BuildContext context) {
     return Container(
       child:  Column(
         children: <Widget>[
           Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
             Expanded(
+              child: Text('时间'),
+              flex: 2,
+            ),
+            Expanded(
               child: FlatButton(
                   onPressed: () {
-                    DatePicker.showDateTimePicker(context, showTitleActions: true,
+                    DatePicker.showDatePicker(context, showTitleActions: true,
                         onConfirm: (date) {
                           setState(() {
-                            _startDate = date;
+                            _dailyDate = date;
                           });
                         }, currentTime: DateTime.now(), locale: LocaleType.zh);
                   },
                   child: Text(
-                    '选择开始时间',
+                    (formatDate(_dailyDate,[yyyy, '-', mm, '-', dd])),
+                    style: TextStyle(color: Colors.blue),
+                  )),
+              flex: 5,
+            ),
+            Expanded(
+              child: Text('从'),
+              flex: 1,
+            ),
+            Expanded(
+              child: FlatButton(
+                  onPressed: () {
+                    _showStartTime(context);
+                  },
+                  child: Text(_startTime[0]+ ':' + _startTime[1],
                     style: TextStyle(color: Colors.blue),
                   )),
               flex: 4,
             ),
             Expanded(
-              child: Text('$_startDate'),
-              flex: 8,
+              child: Text('到'),
+              flex: 1,
+            ),
+            Expanded(
+              child: FlatButton(
+                  onPressed: () {
+                    _showEndTime(context);
+                  },
+                  child: Text(_endTime[0]+ ':' + _endTime[1],
+                    style: TextStyle(color: Colors.blue),
+                  )),
+              flex: 4,
             ),
           ]),
-          Row(mainAxisAlignment: MainAxisAlignment.start, children: <Widget>[
-            Expanded(
-              child: FlatButton(
-                  onPressed: () {
-                    DatePicker.showDateTimePicker(context, showTitleActions: true,
-                        onConfirm: (date) {
-                          setState(() {
-                            _endDate = date;
-                          });
-                        }, currentTime: DateTime.now(), locale: LocaleType.zh);
-                  },
-                  child: Text(
-                    '选择结束时间',
-                    style: TextStyle(color: Colors.blue),
-                  )),
-              flex: 4,
-            ),
-            Expanded(
-              child: Text('$_endDate'),
-              flex: 8,
-            ),
-          ])
         ],
       )
 

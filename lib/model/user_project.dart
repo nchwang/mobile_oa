@@ -5,3 +5,11 @@ class UserProject{
   UserProject({this.projectId,
     this.projectName});
 }
+
+class UserAction{
+  int actionValue;
+  String actionName;
+
+  UserAction({this.actionValue,this.actionName});
+
+}

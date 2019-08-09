@@ -18,5 +18,5 @@ class ProjectApi{
    * To get the project list with parameters : user_id in ge method
    */
   static const String project_list = '/sales/project/?per_page=999';
-  static const String project_action = '/sales/project/diary/action-codes-for-diary';
+  static const String project_action = '/sales/project/diary/action-codes';
 }

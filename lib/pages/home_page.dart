@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 _buildClickButton(context,'images/shenpi.png','审批',RouteConfig.ROUTE_DAILY_PAGE),
-                _buildClickButton(context,'images/jihua.png','计划',RouteConfig.ROUTE_DAILY_PAGE)],
+                _buildClickButton(context,'images/jihua.png','计划',RouteConfig.ROUTE_PLAN_PAGE)],
             ),
           ],
         ),
